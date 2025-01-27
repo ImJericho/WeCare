@@ -1,0 +1,2 @@
+# WeCare
+Techgium Hackathon Solution
