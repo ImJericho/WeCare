@@ -1,9 +1,9 @@
 import sqlite3
 
 class WeCareDatabase:
-    def __init__(self, db_name='../wecare.db'):
+    def __init__(self, db_name='patient_doctor.db'):
         self.db_name = db_name
-        self._initialize_database()
+        # self._initialize_database()
 
     def _initialize_database(self):
         conn = sqlite3.connect(self.db_name)

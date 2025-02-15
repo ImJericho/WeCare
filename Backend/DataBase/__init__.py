@@ -1,0 +1,1 @@
+from DataBase.initialization import WeCareDatabase
