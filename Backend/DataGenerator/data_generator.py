@@ -34,7 +34,7 @@ class DataGenerator:
 
             self.client.write(database=self.database, record=points)
             print(f"Uploading for {time.strftime('%Y-%m-%d %H:%M:%S')}")
-            time.sleep(time)  # separate points by 1 second
+            time.sleep(sleep_time)  # separate points by 1 second
         print("Complete. Return to the InfluxDB UI.")
 
 
