@@ -1,5 +1,5 @@
 import sqlite3
-from DataBase import WeCareDatabase
+from DataBase import PatientDoctorDB
 
 
 class SQLMetaDataGenerator:
@@ -121,7 +121,7 @@ def add_sensors_meta_data():
         smdg.insert_sensor(sensor["name"], sensor["type"], sensor["unit"], sensor["min"], sensor["max"], sensor["algorithm"])
 
 def add_patients_meta_data():
-    db = WeCareDatabase()
+    db = PatientDoctorDB()
     patients, _ = db.get_patients()
 
     smdg = SQLMetaDataGenerator()

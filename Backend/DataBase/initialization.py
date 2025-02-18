@@ -1,6 +1,6 @@
 import sqlite3
 
-class WeCareDatabase:
+class PatientDoctorDB:
     def __init__(self, db_name='patient_doctor.db'):
         self.db_name = db_name
         # self._initialize_database()
@@ -40,22 +40,28 @@ class WeCareDatabase:
         conn.commit()
         conn.close()
 
-    def add_doctor(self, doctor_id, name):
+    def add_doctor(self, doctor_id, name, specialty=None, phone=None, email=None, hospital=None):
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
         if self.if_doctor_exists(doctor_id):
             return False, "Doctor already exists"
-        cursor.execute('INSERT INTO doctors (doctor_id, name) VALUES (?, ?)', (doctor_id, name))
+        cursor.execute('''
+            INSERT INTO doctors (doctor_id, name, specialty, phone, email, hospital) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (doctor_id, name, specialty, phone, email, hospital))
         conn.commit()
         conn.close()
         return True, "Doctor added successfully"
 
-    def add_patient(self, patient_id, name):
+    def add_patient(self, patient_id, name, phone=None, email=None, address=None, birthdate=None):
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
         if self.if_patient_exists(patient_id):
             return False, "Patient already exists"
-        cursor.execute('INSERT INTO patients (patient_id, name) VALUES (?, ?)', (patient_id, name))
+        cursor.execute('''
+            INSERT INTO patients (patient_id, name, phone, email, address, birthdate) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (patient_id, name, phone, email, address, birthdate))
         conn.commit()
         conn.close()
         return True, "Patient added successfully"
@@ -133,9 +139,11 @@ class WeCareDatabase:
         doctor = cursor.fetchone()
         conn.close()
         return doctor is not None
+    
+
 
 if __name__ == "__main__":
-    db = WeCareDatabase()
+    db = PatientDoctorDB()
     db.add_doctor(10001, 'Dr. Nisha Choudhary')
     db.add_doctor(10002, "Dr. Vimal Jain")
     db.add_doctor(10003, "Dr. Ravi Kumar")

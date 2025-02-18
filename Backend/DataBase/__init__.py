@@ -1,1 +1,1 @@
-from DataBase.initialization import WeCareDatabase
+from DataBase.initialization import PatientDoctorDB

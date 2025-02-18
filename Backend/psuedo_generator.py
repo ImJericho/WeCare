@@ -1,4 +1,4 @@
-from DataBase import WeCareDatabase
+from DataBase import PatientDoctorDB
 from DataGenerator import generate_pseudo_data
 
 # db = WeCareDatabase()
