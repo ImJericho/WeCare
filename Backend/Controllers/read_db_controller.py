@@ -1,10 +1,10 @@
 from flask import request, Response, json, Blueprint, current_app
 
 # user controller blueprint to be registered with api blueprint
-viewer = Blueprint("viewer", __name__)
+viewer_db = Blueprint("viewer_db", __name__)
 
 
-@viewer.route('/find_patient_of_doctor/<doctor_id>', methods = ["GET"])
+@viewer_db.route('/find_patient_of_doctor/<doctor_id>', methods = ["GET"])
 def get_patient_of_doctor(doctor_id):
     try:
         db = current_app.patient_doctor_db
@@ -37,7 +37,7 @@ def get_patient_of_doctor(doctor_id):
                 mimetype='application/json'
             )
     
-@viewer.route('/get_doctor_detail/<doctor_id>', methods = ["GET"])
+@viewer_db.route('/get_doctor_detail/<doctor_id>', methods = ["GET"])
 def get_doctor_detail(doctor_id):
     try:
         db = current_app.patient_doctor_db
@@ -70,7 +70,7 @@ def get_doctor_detail(doctor_id):
                 mimetype='application/json'
             )
 
-@viewer.route('/get_patient_detail/<patient_id>', methods = ["GET"])
+@viewer_db.route('/get_patient_detail/<patient_id>', methods = ["GET"])
 def get_patient_detail(patient_id):
     try:
         db = current_app.patient_doctor_db

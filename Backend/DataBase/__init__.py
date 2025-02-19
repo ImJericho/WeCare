@@ -1,1 +1,1 @@
-from DataBase.initialization import PatientDoctorDB
+from DataBase.sql_db_service import PatientDoctorDB

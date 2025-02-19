@@ -33,12 +33,12 @@ class DataGenerator:
                     points.append(point)
 
             self.client.write(database=self.database, record=points)
-            print(f"Uploading for {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"Uploading for {time.strftime('%Y-%m-%d %H:%M:%S')} and {patients}")
             time.sleep(sleep_time)  # separate points by 1 second
         print("Complete. Return to the InfluxDB UI.")
 
 
-def get_active_patients(db_name='psuedo_data_generator.db'):
+def get_active_patients(db_name='./DataBase/psuedo_data_generator.db'):
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
     c.execute("SELECT * FROM patients WHERE active=1")
@@ -46,7 +46,7 @@ def get_active_patients(db_name='psuedo_data_generator.db'):
     conn.close()
     return patients
 
-def get_sensors(db_name='psuedo_data_generator.db'):
+def get_sensors(db_name='./DataBase/psuedo_data_generator.db'):
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
     c.execute("SELECT * FROM sensors")
