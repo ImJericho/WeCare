@@ -7,6 +7,7 @@ import json
 from langchain_core.messages import AnyMessage, SystemMessage, HumanMessage, ToolMessage
 from ChatBot.prompts import prompt
 from InfluxDB import InfluxDB
+from ChatBot.helper import find_avg_vital_sign, find_patient_details, find_doctor_details, find_who_is_my_doctor
 
 @tool
 def get_avg_temperature(patient_id: int, days: int)-> float:
@@ -15,17 +16,38 @@ def get_avg_temperature(patient_id: int, days: int)-> float:
     e.g. get_avg_temperature: 20001, 2
     Returns average temperature for patient_id 20001 for 2 days.
     """
-    token = "=="
-    org = "WeCare"
-    host = "https://us-east-1-1.aws.cloud2.influxdata.com"
-    database="VitalSigns"
-    idb = InfluxDB(host=host, token=token, org=org, database=database)
+    res = find_avg_vital_sign(patient_id, "Temperature", days, return_json=False)
+    return res
 
-    df, _ = idb.find_avg_vital_signs_by_patient_id_for_today(patient_id, "Temperature")
-    if df is None:
-        return None
-    return df["average"].mean()
+@tool
+def get_avg_blood_pressure(patient_id: int, days: int)-> float:
+    """
+    Returns average blood pressure for input patient_id and days.
+    e.g. get_avg_blood_pressure: 20001, 2
+    Returns average blood pressure for patient_id 20001 for 2 days.
+    """
+    res = find_avg_vital_sign(patient_id, "Blood_Pressure", days, return_json=False)
+    return res
 
+@tool
+def get_avg_heart_rate(patient_id: int, days: int)-> float:
+    """
+    Returns average heart rate for input patient_id and days.
+    e.g. get_avg_heart_rate: 20001, 2
+    Returns average heart rate for patient_id 20001 for 2 days.
+    """
+    res = find_avg_vital_sign(patient_id, "Heart_Rate", days, return_json=False)
+    return res
+
+@tool
+def get_avg_spo2(patient_id: int, days: int)-> float:
+    """
+    Returns average Oxygen for input patient_id and days.
+    e.g. get_avg_spo2: 20001, 2
+    Returns average respiratory rate for patient_id 20001 for 2 days.
+    """
+    res = find_avg_vital_sign(patient_id, "Oxygen", days, return_json=False)
+    return res
 
 @tool
 def patient_details(patient_id: str)-> str:
@@ -34,15 +56,28 @@ def patient_details(patient_id: str)-> str:
     e.g. patient_details: 20001
     Returns Patient Details for patient_id 20001.
     """
-    info = {
-        "name": "John Doe",
-        "age": "3",
-        "address": "New vihar, shajapur, mp, India"
-    }
-    
+    info = find_patient_details(patient_id)
     return json.dumps(info)
 
+@tool
+def doctor_detail(doctor_id: str)-> str:
+    """
+    Returns Doctor Details for input doctor_id.
+    e.g. doctor_details: 10001
+    Returns Doctor Details for doctor_id 10001.
+    """
+    info = find_doctor_details(doctor_id)
+    return json.dumps(info)
 
+@tool 
+def who_is_my_doctor(patient_id: str)-> str:
+    """
+    Returns Doctor Details for input patient_id.
+    e.g. who_is_my_doctor: 20001
+    Returns Doctor Details for patient_id 20001.
+    """
+    info = find_who_is_my_doctor(patient_id)
+    return json.dumps(info)
 
 class AgentState(TypedDict): ## Agent's current state, it can be history of messsages and other attributes you want to maintain
     messages: Annotated[list[AnyMessage], operator.add]   ## {'messages': []}
@@ -52,7 +87,10 @@ class ReActAgent:
     def __init__(self, api_key, model_name, db):
         tools = [
             patient_details,
-            get_avg_temperature
+            get_avg_temperature,
+            get_avg_blood_pressure,
+            get_avg_heart_rate,
+            get_avg_spo2
         ]
         self.init_system()
         self.init_tools(tools)
@@ -116,7 +154,8 @@ class ReActAgent:
         return {'messages': results} ## [ToolMessage, ToolMessage, ...]
     
     def run(self, db, patient_id, query):
-        messages = messages = [HumanMessage(content=query)]
+        updated_query = query+" for your refrence here is the Patient_id: "+str(patient_id)
+        messages = messages = [HumanMessage(content=updated_query)]
         res = self.graph.invoke({"messages": messages})
         try:
             return res['messages'][-1].content, None

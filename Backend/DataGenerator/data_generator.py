@@ -38,7 +38,7 @@ class DataGenerator:
         print("Complete. Return to the InfluxDB UI.")
 
 
-def get_active_patients(db_name='./DataBase/psuedo_data_generator.db'):
+def get_active_patients(db_name='./DataGenerator/psuedo_data_generator.db'):
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
     c.execute("SELECT * FROM patients WHERE active=1")
@@ -46,7 +46,7 @@ def get_active_patients(db_name='./DataBase/psuedo_data_generator.db'):
     conn.close()
     return patients
 
-def get_sensors(db_name='./DataBase/psuedo_data_generator.db'):
+def get_sensors(db_name='./DataGenerator/psuedo_data_generator.db'):
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
     c.execute("SELECT * FROM sensors")

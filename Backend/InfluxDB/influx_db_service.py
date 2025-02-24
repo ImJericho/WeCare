@@ -53,41 +53,16 @@ class InfluxDB:
         return df, None
     
     #This is for chatbot only
-    def find_avg_vital_signs_by_patient_id_for_today(self, patient_id, vital_sign, return_json=False):
+    def find_avg_vital_sign(self, patient_id, vital_sign, days, return_json=False):
         query = f"""SELECT mean("value") as "average"
         FROM '{patient_id}'
-        WHERE time >= now() - interval '1d'
+        WHERE time >= now() - interval '{days} days'
         AND ("value" IS NOT NULL)
         AND "vital" IN ('{vital_sign}')"""
 
-        try:
-            table = self.client.query(query=query, database="VitalSigns", language="sql")
-            df = table.to_pandas().sort_values(by="time")
-            # print(df)
-        except Exception as e:
-            return None, str(e)
-        
-        if return_json:
-            return df.to_json(orient="records"), None
-        return df, None
-    
-    def find_avg_vital_signs_by_patient_id_for_week(self, patient_id, vital_sign, return_json=False):
-        query = f"""SELECT mean("value") as "average"
-        FROM '{patient_id}'
-        WHERE time >= now() - interval '7d'
-        AND ("value" IS NOT NULL)
-        AND "vital" IN ('{vital_sign}')"""
+        res = self.client.query(query=query, database="VitalSigns", language="sql")
 
-        try:
-            table = self.client.query(query=query, database="VitalSigns", language="sql")
-            df = table.to_pandas().sort_values(by="time")
-            # print(df)
-        except Exception as e:
-            return None, str(e)
-        
-        if return_json:
-            return df.to_json(orient="records"), None
-        return df, None
+        return res[0][0]
 
 if __name__ == "__main__":
     token = "=="

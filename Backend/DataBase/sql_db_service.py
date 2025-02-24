@@ -104,6 +104,16 @@ class PatientDoctorDB:
             return None, "No patients assigned to this doctor"
         return patients, "Patients assigned to this doctor"
     
+    def get_doctor_of_patient(self, patient_id):
+        conn = sqlite3.connect(self.db_name)
+        cursor = conn.cursor()
+        cursor.execute('SELECT doctor_id FROM doctor_patient WHERE patient_id = ?', (patient_id,))
+        doctor = cursor.fetchone()
+        conn.close()
+        if doctor is None:
+            return None, "No doctor assigned to this patient"
+        return doctor, "Doctor assigned to this patient"
+    
     def get_doctor_detail(self, doctor_id):
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
