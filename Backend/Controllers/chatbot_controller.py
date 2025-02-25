@@ -8,7 +8,7 @@ chatbot = Blueprint("chatbot", __name__)
 def chat_query():
     try:
         data = request.json
-        if "patient_id" in data and "query" in data:
+        if "patient_id" in data and "query" in data and "session_id" in data:
             db = current_app.patient_doctor_db
             if not db.if_patient_exists(data['patient_id']):
                 return Response(
@@ -19,7 +19,7 @@ def chat_query():
                 )
             
             agent = current_app.chatbot
-            res, msg = agent.run(db, data['patient_id'], data['query'])
+            res, msg = agent.run(data['patient_id'], data['query'], data['session_id'])
 
             if res:
                 return Response(

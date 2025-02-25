@@ -2,6 +2,7 @@ from langchain_groq import ChatGroq
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Annotated
 from langchain_core.tools import tool, StructuredTool
+from langgraph.checkpoint.memory import MemorySaver
 import operator
 import json
 from langchain_core.messages import AnyMessage, SystemMessage, HumanMessage, ToolMessage
@@ -50,7 +51,7 @@ def get_avg_spo2(patient_id: int, days: int)-> float:
     return res
 
 @tool
-def patient_details(patient_id: str)-> str:
+def patient_details(patient_id: int)-> str:
     """
     Returns Patient Details for input patient_id.
     e.g. patient_details: 20001
@@ -59,20 +60,10 @@ def patient_details(patient_id: str)-> str:
     info = find_patient_details(patient_id)
     return json.dumps(info)
 
-@tool
-def doctor_detail(doctor_id: str)-> str:
-    """
-    Returns Doctor Details for input doctor_id.
-    e.g. doctor_details: 10001
-    Returns Doctor Details for doctor_id 10001.
-    """
-    info = find_doctor_details(doctor_id)
-    return json.dumps(info)
-
 @tool 
-def who_is_my_doctor(patient_id: str)-> str:
+def who_is_my_doctor(patient_id: int)-> str:
     """
-    Returns Doctor Details for input patient_id.
+    Returns the details of the Doctor for the given patient.
     e.g. who_is_my_doctor: 20001
     Returns Doctor Details for patient_id 20001.
     """
@@ -87,6 +78,7 @@ class ReActAgent:
     def __init__(self, api_key, model_name, db):
         tools = [
             patient_details,
+            who_is_my_doctor,
             get_avg_temperature,
             get_avg_blood_pressure,
             get_avg_heart_rate,
@@ -108,7 +100,8 @@ class ReActAgent:
         )
         graph.add_edge("action", "llama3")
         graph.set_entry_point("llama3")
-        self.graph = graph.compile()
+        memory = MemorySaver()
+        self.graph = graph.compile(checkpointer=memory)
 
     def init_system(self):
         self.system = prompt
@@ -153,10 +146,12 @@ class ReActAgent:
         print("Tools Execution Complete. Back to the model!")
         return {'messages': results} ## [ToolMessage, ToolMessage, ...]
     
-    def run(self, db, patient_id, query):
+    def run(self, patient_id, query, session_id):
         updated_query = query+" for your refrence here is the Patient_id: "+str(patient_id)
         messages = messages = [HumanMessage(content=updated_query)]
-        res = self.graph.invoke({"messages": messages})
+        session_id = patient_id*10+session_id
+        config = {"configurable": {"thread_id": f"{session_id}"}}
+        res = self.graph.invoke({"messages": messages}, config)
         try:
             return res['messages'][-1].content, None
         except Exception as e:
