@@ -161,6 +161,39 @@ export const DoctorDetailAPI = {
   },
 };
 
+export const AuthAPI = {
+  login: async (data: {email: string; password: string}) => {
+    try {
+      console.log('Sending request to:', `${API_BASE_URL}${ENDPOINTS.LOGIN}`);
+      console.log('Request data:', data);
+
+      const response = await api.post(ENDPOINTS.LOGIN, data);
+
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Full error:', error);
+
+      if (axios.isAxiosError(error)) {
+        const errorData = error.response?.data;
+        throw {
+          status: error.response?.status || 500,
+          message: errorData?.error || 'An error occurred',
+          details: errorData?.details || null,
+        };
+      }
+
+      throw {
+        status: 500,
+        message: error.message || 'An unexpected error occurred',
+        details: null,
+      };
+    }
+  },
+};
 // import axios from 'axios';
 // import { API_BASE_URL, ENDPOINTS } from '../config/apiConfig';
 
