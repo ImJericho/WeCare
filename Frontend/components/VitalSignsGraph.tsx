@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -26,32 +26,111 @@ const VitalSignsGraph: React.FC<VitalSignsGraphProps> = ({ data }) => {
   const [dateType, setDateType] = useState<'start' | 'end'>('start');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
+  const [graphData, setGraphData] = useState<{ labels: string[]; values: number[] }>({ labels: [], values: [] });
 
-  // Replace with actual API call (actual data fetching)
-  const generateGraphData = () => {
-    if (activeTab === 'hours') {
-      const hoursCount = parseInt(hours) || 24;
-      const labels = [];
-      const values = [];
-      for (let i = 0; i <= hoursCount; i += hoursCount / 4) {
-        labels.push(`${i}h`);
-        values.push(data.value + Math.random() * 4 - 2);
-      }
-      return { labels, values };
-    } else {
-      const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
-      const labels = [];
-      const values = [];
-      for (let i = 0; i <= daysDiff; i++) {
-        labels.push(`Day ${i + 1}`);
-        values.push(data.value + Math.random() * 4 - 2);
-      }
-      return { labels, values };
+  // Function to generate seeded random number
+  const seededRandom = (seed: number) => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  };
+  const formatValue = (value: number): number => {
+    if (isNaN(value) || !isFinite(value)) {
+      return data.value; // Return base value if invalid
+    }
+    return Number(value.toFixed(1)); // Round to 1 decimal place
+  };
+  const getConsistentRandomValue = (timeKey: string, baseValue: number): number => {
+    try {
+      const seed = Array.from(timeKey + data.title).reduce(
+        (acc, char) => acc + char.charCodeAt(0),
+        0
+      );
+      const variation = (Math.sin(seed) * 4) - 2; // Use Math.sin instead of custom seededRandom
+      
+      // Add bounds to keep values reasonable
+      const minValue = baseValue * 0.8;
+      const maxValue = baseValue * 1.2;
+      const value = baseValue + variation;
+      
+      return formatValue(Math.min(Math.max(value, minValue), maxValue));
+    } catch (error) {
+      console.error('Error generating value:', error);
+      return formatValue(baseValue);
     }
   };
 
-  const graphData = generateGraphData();
+  // Format date for consistent key generation
+  const formatDateForKey = (date: Date) => {
+    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  };
 
+  const generateGraphData = () => {
+    try {
+      if (activeTab === 'hours') {
+        const hoursCount = Math.min(Math.max(parseInt(hours) || 24, 1), 168); // Limit between 1 and 168 hours
+        const labels: string[] = [];
+        const values: number[] = [];
+        const now = new Date();
+
+        for (let i = hoursCount; i >= 0; i -= Math.max(1, hoursCount / 5)) {
+          const timeForPoint = new Date(now.getTime() - (i * 60 * 60 * 1000));
+          const timeKey = `${formatDateForKey(timeForPoint)}-${timeForPoint.getHours()}`;
+          
+          labels.push(`${Math.floor(i)}h`);
+          values.push(getConsistentRandomValue(timeKey, data.value));
+        }
+
+        return {
+          labels: labels.filter(Boolean),
+          values: values.filter(v => isFinite(v) && !isNaN(v))
+        };
+      } else {
+        const daysDiff = Math.max(1, Math.ceil(
+          (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
+        ));
+        const labels: string[] = [];
+        const values: number[] = [];
+
+        for (let i = 0; i <= Math.min(daysDiff, 30); i++) { // Limit to 30 days
+          const dateForPoint = new Date(startDate.getTime() + (i * 24 * 60 * 60 * 1000));
+          const timeKey = formatDateForKey(dateForPoint);
+          
+          labels.push(dateForPoint.toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric'
+          }));
+          values.push(getConsistentRandomValue(timeKey, data.value));
+        }
+
+        return {
+          labels: labels.filter(Boolean),
+          values: values.filter(v => isFinite(v) && !isNaN(v))
+        };
+      }
+    } catch (error) {
+      console.error('Error generating graph data:', error);
+      return { labels: [], values: [] };
+    }
+  };
+
+  // Update graph data when inputs change
+  useEffect(() => {
+    try {
+      const newData = generateGraphData();
+      if (newData.labels.length > 0 && newData.values.length > 0) {
+        setGraphData(newData);
+      }
+    } catch (error) {
+      console.error('Error updating graph data:', error);
+    }
+  }, [activeTab, hours, startDate, endDate, data.value]);
+
+  // Ensure we have valid data before rendering the chart
+  const hasValidData = graphData.labels.length > 0 && 
+                      graphData.values.length > 0 && 
+                      graphData.labels.length === graphData.values.length;
+
+  // Handle date picker changes
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
@@ -61,6 +140,12 @@ const VitalSignsGraph: React.FC<VitalSignsGraphProps> = ({ data }) => {
         setEndDate(selectedDate);
       }
     }
+  };
+
+  // Handle hours input change
+  const handleHoursChange = (text: string) => {
+    const numericValue = text.replace(/[^0-9]/g, '');
+    setHours(numericValue);
   };
 
   return (
@@ -92,9 +177,10 @@ const VitalSignsGraph: React.FC<VitalSignsGraphProps> = ({ data }) => {
           <TextInput
             style={styles.hoursInput}
             value={hours}
-            onChangeText={setHours}
+            onChangeText={handleHoursChange}
             keyboardType="numeric"
             placeholder="Enter hours"
+            maxLength={3}
           />
         </View>
       )}
@@ -127,34 +213,43 @@ const VitalSignsGraph: React.FC<VitalSignsGraphProps> = ({ data }) => {
 
       {/* Graph */}
       <View style={styles.graphWrapper}>
-        <LineChart
-          data={{
-            labels: graphData.labels,
-            datasets: [{
-              data: graphData.values
-            }]
-          }}
-          width={Dimensions.get('window').width - 60}
-          height={220}
-          chartConfig={{
-            backgroundColor: '#ffffff',
-            backgroundGradientFrom: '#ffffff',
-            backgroundGradientTo: '#ffffff',
-            decimalPlaces: 1,
-            color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            style: {
-              borderRadius: 16,
-            },
-            propsForDots: {
-              r: '6',
-              strokeWidth: '2',
-              stroke: '#007AFF',
-            },
-          }}
-          bezier
-          style={styles.graph}
-        />
+        {hasValidData ? (
+          <LineChart
+            data={{
+              labels: graphData.labels,
+              datasets: [{
+                data: graphData.values.map(v => formatValue(v))
+              }]
+            }}
+            width={Dimensions.get('window').width - 60}
+            height={220}
+            chartConfig={{
+              backgroundColor: '#ffffff',
+              backgroundGradientFrom: '#ffffff',
+              backgroundGradientTo: '#ffffff',
+              decimalPlaces: 1,
+              color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              style: {
+                borderRadius: 16,
+              },
+              propsForDots: {
+                r: '6',
+                strokeWidth: '2',
+                stroke: '#007AFF',
+              },
+              formatYLabel: (value) => formatValue(parseFloat(value)).toString(),
+            }}
+            bezier
+            style={styles.graph}
+            fromZero={false}
+            segments={5}
+          />
+        ) : (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>No valid data to display</Text>
+          </View>
+        )}
       </View>
 
       {showDatePicker && (
@@ -163,6 +258,7 @@ const VitalSignsGraph: React.FC<VitalSignsGraphProps> = ({ data }) => {
           mode="date"
           display="default"
           onChange={handleDateChange}
+          maximumDate={new Date()}
         />
       )}
     </View>
@@ -245,6 +341,15 @@ const styles = StyleSheet.create({
   graph: {
     marginVertical: 8,
     borderRadius: 16,
+  },
+  errorContainer: {
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#666',
+    fontSize: 16,
   },
 });
 
