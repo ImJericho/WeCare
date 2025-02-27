@@ -87,7 +87,7 @@ const mockLoginAPI = async (email: string, password: string) => {
   if (email === 'doctor@example.com' && password === 'doctor123') {
     return {
       user: {
-        id: '2',
+        id: '10003',
         name: 'Doctor User',
         role: 'doctor',
         email: 'doctor@example.com',

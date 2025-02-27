@@ -84,6 +84,81 @@ export const PatientDetailAPI = {
       };
     }
   },
+  getDoctorDetails: async (data: {userID: string}) => {
+    try {
+      console.log(
+        'Sending request to:',
+        `${API_BASE_URL}${ENDPOINTS.DOCTORPATIENTDETAILS}/${data.userID}`,
+      );
+
+      const response = await api.get(
+        `${ENDPOINTS.DOCTORPATIENTDETAILS}/${data.userID}`,
+      );
+
+      console.log('got the response = ', response);
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Full error:', error);
+
+      if (axios.isAxiosError(error)) {
+        const errorData = error.response?.data;
+        throw {
+          status: error.response?.status || 500,
+          message: errorData?.error || 'An error occurred',
+          details: errorData?.details || null,
+        };
+      }
+
+      throw {
+        status: 500,
+        message: error.message || 'An unexpected error occurred',
+        details: null,
+      };
+    }
+  },
+};
+
+export const DoctorDetailAPI = {
+  getDoctorDetails: async (data: {userID: string}) => {
+    try {
+      console.log(
+        'Sending request to:',
+        `${API_BASE_URL}${ENDPOINTS.DOCTORDETAILS}/${data.userID}`,
+      );
+
+      const response = await api.get(
+        `${ENDPOINTS.DOCTORDETAILS}/${data.userID}`,
+      );
+
+      console.log('got the response = ', response);
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Full error:', error);
+
+      if (axios.isAxiosError(error)) {
+        const errorData = error.response?.data;
+        throw {
+          status: error.response?.status || 500,
+          message: errorData?.error || 'An error occurred',
+          details: errorData?.details || null,
+        };
+      }
+
+      throw {
+        status: 500,
+        message: error.message || 'An unexpected error occurred',
+        details: null,
+      };
+    }
+  },
 };
 
 // import axios from 'axios';

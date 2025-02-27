@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,11 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
+import {useAuth} from '../context/AuthContext';
+import {PatientDetailAPI, DoctorDetailAPI} from '../src/services/api';
 
 const DoctorDetailsScreen = () => {
-  const doctorInfo = {
+  const InitialdoctorInfo = {
     name: 'Dr. Shashvat Jain',
     id: 'DOC2023045',
     specialization: 'Neonatologist',
@@ -19,11 +21,11 @@ const DoctorDetailsScreen = () => {
     email: 'shashvat.jain@hospital.com',
     phone: '+91 95824 96558',
     schedule: [
-      { day: 'Monday', hours: '9:00 AM - 5:00 PM' },
-      { day: 'Tuesday', hours: '9:00 AM - 5:00 PM' },
-      { day: 'Wednesday', hours: '9:00 AM - 5:00 PM' },
-      { day: 'Thursday', hours: '9:00 AM - 5:00 PM' },
-      { day: 'Friday', hours: '9:00 AM - 3:00 PM' },
+      {day: 'Monday', hours: '9:00 AM - 5:00 PM'},
+      {day: 'Tuesday', hours: '9:00 AM - 5:00 PM'},
+      {day: 'Wednesday', hours: '9:00 AM - 5:00 PM'},
+      {day: 'Thursday', hours: '9:00 AM - 5:00 PM'},
+      {day: 'Friday', hours: '9:00 AM - 3:00 PM'},
     ],
     education: [
       'MD in Pediatrics, ISM Medical School',
@@ -31,6 +33,51 @@ const DoctorDetailsScreen = () => {
       'Board Certified in Neonatal-Perinatal Medicine',
     ],
   };
+
+  const [doctorInfo, setDoctorInfo] = useState(InitialdoctorInfo);
+  const {user} = useAuth();
+
+  const getPatientsDoctorDetails = useCallback(async () => {
+    const doctorDetails = await PatientDetailAPI.getDoctorDetails({
+      userID: user.id,
+    });
+    if (doctorDetails?.education) {
+      doctorDetails.education = JSON.parse(doctorDetails?.education);
+    }
+    if (doctorDetails?.schedule) {
+      doctorDetails.schedule = JSON.parse(doctorDetails?.schedule);
+    }
+    console.log('the doctorDetails = ', doctorDetails);
+    setDoctorInfo(prev => {
+      return {...prev, ...doctorDetails};
+    });
+  }, [user.id]);
+
+  const getDoctorDetails = useCallback(async () => {
+    const doctorDetails = await DoctorDetailAPI.getDoctorDetails({
+      userID: user.id,
+    });
+    console.log('the doctorDetails = ', doctorDetails);
+    if (doctorDetails?.education) {
+      doctorDetails.education = JSON.parse(doctorDetails?.education);
+    }
+    if (doctorDetails?.schedule) {
+      doctorDetails.schedule = JSON.parse(doctorDetails?.schedule);
+    }
+    setDoctorInfo(prev => {
+      return {...prev, ...doctorDetails};
+    });
+  }, [user.id]);
+
+  useEffect(() => {
+    if (user && user?.role === 'patient') {
+      getPatientsDoctorDetails();
+    } else if (user && user?.role === 'doctor') {
+      getDoctorDetails();
+    } else {
+      console.log('Neither Doctor not patient');
+    }
+  }, [user, getPatientsDoctorDetails, getDoctorDetails]);
 
   return (
     <ScrollView style={styles.container}>
@@ -85,7 +132,7 @@ const DoctorDetailsScreen = () => {
   );
 };
 
-const InfoItem = ({ label, value }) => (
+const InfoItem = ({label, value}) => (
   <View style={styles.infoItem}>
     <Text style={styles.label}>{label}</Text>
     <Text style={styles.value}>{value}</Text>
@@ -135,7 +182,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
