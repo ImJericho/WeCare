@@ -1,4 +1,5 @@
 import React, {createContext, useState, useContext} from 'react';
+import {AuthAPI} from '../src/services/api';
 
 type UserRole = 'patient' | 'doctor' | 'admin';
 
@@ -68,45 +69,16 @@ export const useAuth = () => {
   return context;
 };
 
-// Replace with actual API call
 const mockLoginAPI = async (email: string, password: string) => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  if (email === 'admin@example.com' && password === 'admin123') {
+  try {
+    const response = await AuthAPI.login({email, password});
+    console.log('response = ', response);
     return {
-      user: {
-        id: '1',
-        name: 'Admin User',
-        role: 'admin',
-        email: 'admin@example.com',
-      },
+      user: response,
     };
+  } catch (error) {
+    throw error;
   }
-
-  if (email === 'doctor@example.com' && password === 'doctor123') {
-    return {
-      user: {
-        id: '10003',
-        name: 'Doctor User',
-        role: 'doctor',
-        email: 'doctor@example.com',
-      },
-    };
-  }
-
-  if (email === 'patient@example.com' && password === 'patient123') {
-    return {
-      user: {
-        id: '20007',
-        name: 'Patient User',
-        role: 'patient',
-        email: 'patient@example.com',
-      },
-    };
-  }
-
-  throw new Error('Invalid credentials');
 };
 
 const mockRegisterAPI = async (userData: any) => {
