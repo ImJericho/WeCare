@@ -10,19 +10,27 @@ import UserManagementScreen from './screen/UserManagementScreen';
 
 const MainApp = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = React.useState('vitals');
+  let stat='patient'
+  if(user?.role=='admin'){
+    stat='users'
+  }
+  const [activeTab, setActiveTab] = React.useState(stat);
 
   const getAvailableTabs = () => {
-    const tabs = [
-      { id: 'vitals', label: 'Vital Signs' },
-      { id: 'patient', label: 'Patient Details' },
-      { id: 'doctor', label: 'Doctor Details' },
-      { id: 'chat', label: 'Chatbot' },
-    ];
-
+    const tabs = []
     if (user?.role === 'admin') {
       tabs.push({ id: 'users', label: 'User Management' });
     }
+    if(user?.role === 'patient'){
+      tabs.push({ id: 'patient', label: 'Patient Details' });
+      tabs.push({ id: 'vitals', label: 'Vital Signs' });
+    }
+    if(user?.role === 'doctor'){
+      tabs.push({ id: 'doctor', label: 'Doctor Details' });
+    }
+    tabs.push({ id: 'chat', label: 'Chatbot' });
+
+    
 
     return tabs;
   };
@@ -36,11 +44,11 @@ const MainApp = () => {
       />
       
       <View style={styles.content}>
-        {activeTab === 'vitals' && <VitalSignsScreen />}
+        {activeTab === 'users' && user?.role === 'admin' && <UserManagementScreen />}
         {activeTab === 'patient' && <PatientDetailsScreen />}
         {activeTab === 'doctor' && <DoctorDetailsScreen />}
+        {activeTab === 'vitals' && <VitalSignsScreen />}
         {activeTab === 'chat' && <ChatbotScreen />}
-        {activeTab === 'users' && user?.role === 'admin' && <UserManagementScreen />}
       </View>
     </View>
   );

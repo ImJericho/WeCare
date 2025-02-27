@@ -46,7 +46,11 @@ const Navbar: React.FC<NavbarProps> = ({ tabs, activeTab, onTabChange }) => {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Neonatal Monitoring</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.titleWe}>We</Text>
+            <Text style={styles.titleCare}>Care</Text>
+          </View>
+          {/* <Text style={styles.headerTitle}>Neonatal Monitoring</Text> */}
           <View style={styles.userInfo}>
             <TouchableOpacity style={styles.userButton}>
               <Icon name="account-circle" size={24} color="#666" />
@@ -134,6 +138,22 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom:10,
+  },
+  titleWe: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: '#34C759',
+  },
+  titleCare: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: '#007AFF',
   },
   userInfo: {
     flexDirection: 'row',
