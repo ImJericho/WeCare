@@ -122,8 +122,12 @@ class PatientDoctorDB:
         cursor.execute('SELECT * FROM doctors WHERE doctor_id = ?', (doctor_id,))
         doctor = cursor.fetchone()
         conn.close()
-        return doctor, "Doctor details fetched successfully"
-    
+        if doctor:
+            columns = [description[0] for description in cursor.description]
+            doctor_detail = dict(zip(columns, doctor))
+            return doctor_detail, "Doctor details fetched successfully"
+        return None, "Doctor does not exist"
+        
     def get_patient_detail(self, patient_id):
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
@@ -132,7 +136,11 @@ class PatientDoctorDB:
         cursor.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,))
         patient = cursor.fetchone()
         conn.close()
-        return patient, "Patient details fetched successfully"
+        if patient:
+            columns = [description[0] for description in cursor.description]
+            patient_detail = dict(zip(columns, patient))
+            return patient_detail, "Patient details fetched successfully"
+        return None, "Patient does not exist"
     
     def if_patient_exists(self, patient_id):
         conn = sqlite3.connect(self.db_name)
@@ -149,6 +157,9 @@ class PatientDoctorDB:
         doctor = cursor.fetchone()
         conn.close()
         return doctor is not None
+    
+
+
     
 
 
