@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_BASE_URL, ENDPOINTS } from '../config/apiConfig';
+import {API_BASE_URL, ENDPOINTS} from '../config/apiConfig';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -20,7 +20,7 @@ export const chatbotAPI = {
       console.log('Request data:', data);
 
       const response = await api.post(ENDPOINTS.CHATBOT, data);
-      
+
       if (response.data.error) {
         throw new Error(response.data.error);
       }
@@ -28,7 +28,7 @@ export const chatbotAPI = {
       return response.data;
     } catch (error) {
       console.error('Full error:', error);
-      
+
       if (axios.isAxiosError(error)) {
         const errorData = error.response?.data;
         throw {
@@ -37,7 +37,7 @@ export const chatbotAPI = {
           details: errorData?.details || null,
         };
       }
-      
+
       throw {
         status: 500,
         message: error.message || 'An unexpected error occurred',
@@ -47,6 +47,44 @@ export const chatbotAPI = {
   },
 };
 
+export const PatientDetailAPI = {
+  getPatientDetails: async (data: {userID: string}) => {
+    try {
+      console.log(
+        'Sending request to:',
+        `${API_BASE_URL}${ENDPOINTS.PATIENTDETAILS}/${data.userID}`,
+      );
+
+      const response = await api.get(
+        `${ENDPOINTS.PATIENTDETAILS}/${data.userID}`,
+      );
+
+      console.log('got the response = ', response);
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Full error:', error);
+
+      if (axios.isAxiosError(error)) {
+        const errorData = error.response?.data;
+        throw {
+          status: error.response?.status || 500,
+          message: errorData?.error || 'An error occurred',
+          details: errorData?.details || null,
+        };
+      }
+
+      throw {
+        status: 500,
+        message: error.message || 'An unexpected error occurred',
+        details: null,
+      };
+    }
+  },
+};
 
 // import axios from 'axios';
 // import { API_BASE_URL, ENDPOINTS } from '../config/apiConfig';

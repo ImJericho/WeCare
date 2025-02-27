@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, {createContext, useState, useContext} from 'react';
 
 type UserRole = 'patient' | 'doctor' | 'admin';
 
@@ -19,7 +19,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC = ({ children }) => {
+export const AuthProvider: React.FC = ({children}) => {
   const [user, setUser] = useState<User | null>(null);
 
   const login = async (email: string, password: string) => {
@@ -83,7 +83,7 @@ const mockLoginAPI = async (email: string, password: string) => {
       },
     };
   }
-  
+
   if (email === 'doctor@example.com' && password === 'doctor123') {
     return {
       user: {
@@ -98,7 +98,7 @@ const mockLoginAPI = async (email: string, password: string) => {
   if (email === 'patient@example.com' && password === 'patient123') {
     return {
       user: {
-        id: '3',
+        id: '20007',
         name: 'Patient User',
         role: 'patient',
         email: 'patient@example.com',
