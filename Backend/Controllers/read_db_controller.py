@@ -102,7 +102,6 @@ def get_doctor_of_patient(patient_id):
                 mimetype='application/json'
             )
 
-
 @viewer_db.route('/get_patient_detail/<patient_id>', methods = ["GET"])
 def get_patient_detail(patient_id):
     try:
@@ -124,6 +123,44 @@ def get_patient_detail(patient_id):
         else:
             return Response(
                 response=json.dumps(msg),
+                status=404,
+                mimetype='application/json'
+            )
+    except Exception as e:
+        return Response(
+                response=json.dumps({'status': "failed", 
+                                     "message": "Error Occured",
+                                     "error": str(e)}),
+                status=500,
+                mimetype='application/json'
+            )
+    
+@viewer_db.route('/login', methods = ["POST"])
+def login():
+    try:
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        if email is None or password is None:
+            return Response(
+                response=json.dumps({'status': "failed", 
+                                     "message": "Email and password are required"}),
+                status=400,
+                mimetype='application/json'
+            )
+        db = current_app.patient_doctor_db
+        res, msg = db.login_user(email, password)
+        if res:
+            return Response(
+                response=json.dumps(res),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            return Response(
+                response=json.dumps({'status': "failed", 
+                                     "message": "Invalid credentials",
+                                     "error": msg}),
                 status=404,
                 mimetype='application/json'
             )

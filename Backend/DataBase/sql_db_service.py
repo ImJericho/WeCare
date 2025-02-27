@@ -158,11 +158,19 @@ class PatientDoctorDB:
         conn.close()
         return doctor is not None
     
-
-
+    def login_user(self, email, password):
+        conn = sqlite3.connect(self.db_name)
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM users WHERE email = ? AND password = ?', (email, password))
+        user = cursor.fetchone()
+        conn.close()
+        if user:
+            columns = [description[0] for description in cursor.description]
+            user_detail = dict(zip(columns, user))
+            user_detail.pop('password')
+            return user_detail, "User logged in successfully"
+        return None, "Invalid email or password"
     
-
-
 if __name__ == "__main__":
     db = PatientDoctorDB()
     db.add_doctor(10001, 'Dr. Nisha Choudhary')
