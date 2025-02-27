@@ -23,7 +23,6 @@ app.influx_db = InfluxDB(host=host, token=token, org=org, database=database)
 model = "qwen-2.5-32b"
 api_key = os.environ.get("GROQ_API_KEY")
 idb = InfluxDB(host=host, token=token, org=org, database=database)
-
 app.chatbot = ReActAgent(api_key, model, idb)
 
 
