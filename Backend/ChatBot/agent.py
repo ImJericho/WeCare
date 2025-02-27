@@ -3,8 +3,10 @@ from langgraph.graph import StateGraph, END
 from typing import TypedDict, Annotated
 from langchain_core.tools import tool, StructuredTool
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 import operator
 import json
+import sqlite3
 from langchain_core.messages import AnyMessage, SystemMessage, HumanMessage, ToolMessage
 from ChatBot.prompts import prompt
 from InfluxDB import InfluxDB
@@ -100,7 +102,9 @@ class ReActAgent:
         )
         graph.add_edge("action", "llama3")
         graph.set_entry_point("llama3")
-        memory = MemorySaver()
+        # memory = MemorySaver()
+        conn = sqlite3.connect("ChatBot/chats.sqlite", check_same_thread=False)
+        memory = SqliteSaver(conn)
         self.graph = graph.compile(checkpointer=memory)
 
     def init_system(self):
@@ -120,7 +124,6 @@ class ReActAgent:
         )
         self.model = llm.bind_tools(tools, tool_choice="auto")
 
-
     def exists_action(self, state: AgentState):
         result = state['messages'][-1]
         return len(result.tool_calls) > 0
@@ -129,6 +132,7 @@ class ReActAgent:
         messages = state['messages']
         if self.system:
             messages = [SystemMessage(content=self.system)] + messages
+            print("initiated with system message")
         message = self.model.invoke(messages)
         return {'messages': [message]} ## AIMessage
 
@@ -147,23 +151,26 @@ class ReActAgent:
         return {'messages': results} ## [ToolMessage, ToolMessage, ...]
     
     def run(self, patient_id, query, session_id):
-        updated_query = query+" for your refrence here is the Patient_id: "+str(patient_id)
-        messages = messages = [HumanMessage(content=updated_query)]
+        updated_query = f"{query}"
+        messages = [HumanMessage(content=updated_query)]
         session_id = patient_id*10+session_id
         config = {"configurable": {"thread_id": f"{session_id}"}}
         res = self.graph.invoke({"messages": messages}, config)
-        try:
-            return res['messages'][-1].content, None
-        except Exception as e:
-            return None, json.dumps(res)
+        return res['messages'][-1].content, None
 
 
 if __name__=="__main__":
     query = "What is the average temprature of the patient 10001, and is it normal?"
-    query = "Give me the address of the patient 10001"
-    agent = ReActAgent(llm, tools, system=prompt)
+    query = "Is my child's temperature ok? for your refrence here is the Patient_id: 20001"
+
+
+    model = "qwen-2.5-32b"
+    api_key = ""
+    idb = None
+    chatbot = ReActAgent(api_key, model, idb)
+
     messages = [HumanMessage(content=query)]
-    result = agent.graph.invoke({"messages": messages})
+    result = chatbot.graph.invoke({"messages": messages})
 
     print("====>", result['messages'][-1].content)
 
